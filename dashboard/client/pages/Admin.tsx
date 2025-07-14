@@ -34,6 +34,7 @@ import {
   MessageSquare,
   CheckCircle,
 } from "lucide-react";
+import { io, Socket } from "socket.io-client";
 
 export default function Admin() {
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -43,6 +44,26 @@ export default function Admin() {
   const [earlyAccessSignups, setEarlyAccessSignups] = useState<any[]>([]);
   const [contactSubmissions, setContactSubmissions] = useState<any[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+  const [socket, setSocket] = useState<Socket | null>(null);
+
+  // Initialize Socket.io connection
+  useEffect(() => {
+    const newSocket = io("http://localhost:3010");
+    setSocket(newSocket);
+
+    // Listen for real-time updates
+    newSocket.on("contactSubmission", (newContact) => {
+      setContactSubmissions(prev => [newContact, ...prev]);
+    });
+
+    newSocket.on("earlyAccessSignup", (newSignup) => {
+      setEarlyAccessSignups(prev => [newSignup, ...prev]);
+    });
+
+    return () => {
+      newSocket.close();
+    };
+  }, []);
 
   // Fetch data on component mount
   useEffect(() => {
@@ -199,35 +220,9 @@ export default function Admin() {
     },
   ];
 
-  const topStreamers = [
-    {
-      id: 1,
-      name: "RwandaGamer",
-      viewers: "2.3K",
-      revenue: "$1,240",
-      category: "Gaming",
-    },
-    {
-      id: 2,
-      name: "KigaliMusic",
-      viewers: "1.8K",
-      revenue: "$980",
-      category: "Music",
-    },
-    {
-      id: 3,
-      name: "TechRwanda",
-      viewers: "1.2K",
-      revenue: "$750",
-      category: "Tech",
-    },
-    {
-      id: 4,
-      name: "CultureShow",
-      viewers: "890",
-      revenue: "$520",
-      category: "Culture",
-    },
+  // Remove dummy data - only show real entries
+  const recentActivity = [
+    // This will be populated with real data from API
   ];
 
   const menuItems = [
@@ -496,63 +491,22 @@ export default function Admin() {
                 </CardHeader>
                 <CardContent>
                   <div className="space-y-4">
-                    <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-green-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="font-semibold">
-                          New early access signup
+                    {recentActivity.map((activity, index) => (
+                      <div key={index} className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
+                        <div className="w-2 h-2 bg-green-500 rounded-full"></div>
+                        <div className="flex-1">
+                          <div className="font-semibold">
+                            {activity.type}
+                          </div>
+                          <div className="text-sm text-muted-foreground">
+                            {activity.message}
+                          </div>
                         </div>
                         <div className="text-sm text-muted-foreground">
-                          Jean Baptiste Mugisha signed up for early access
+                          {activity.time}
                         </div>
                       </div>
-                      <div className="text-sm text-muted-foreground">
-                        2 min ago
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-blue-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="font-semibold">
-                          Contact message received
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          Sarah Nyirahabimana sent a partnership inquiry
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        5 min ago
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-yellow-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="font-semibold">Early access signup</div>
-                        <div className="text-sm text-muted-foreground">
-                          Marie Claire Uwimana joined the waitlist
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        12 min ago
-                      </div>
-                    </div>
-
-                    <div className="flex items-center gap-4 p-3 rounded-lg bg-muted/50">
-                      <div className="w-2 h-2 bg-purple-500 rounded-full"></div>
-                      <div className="flex-1">
-                        <div className="font-semibold">
-                          Contact message received
-                        </div>
-                        <div className="text-sm text-muted-foreground">
-                          David Uwizera inquired about business solutions
-                        </div>
-                      </div>
-                      <div className="text-sm text-muted-foreground">
-                        25 min ago
-                      </div>
-                    </div>
+                    ))}
                   </div>
                 </CardContent>
               </Card>
